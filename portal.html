@@ -316,21 +316,55 @@
     apply();
   }
 
-  // ── Fetch & boot ──────────────────────────────────────────────────────────
-  fetch(SHEETS_CSV_URL)
-    .then(function(r){
-      if(!r.ok)throw new Error("HTTP "+r.status);
-      return r.text();
-    })
-    .then(function(csv){
-      var rows=parseCSV(csv);
-      var players=rows.map(function(row,i){return csvRowToPlayer(row,i+1);}).filter(function(p){return p.name;});
-      if(!players.length)throw new Error("No players found in sheet");
-      renderPortal(players);
-    })
-    .catch(function(err){
-      document.getElementById("portal-root").innerHTML='<div class="error-box"><strong>Could not load portal data</strong><br><small>'+err.message+'</small><br><small style="opacity:0.6">Make sure the Google Sheet is published to web as CSV and CORS is enabled.</small></div>';
-    });
+  // ── Seed data (baked in at export time for instant first load) ──────────
+  var SEED = [{"id":1,"name":"Devin Russell","pos":"C","posType":"hitter","from":"Maryland","to":"","stats":".250 BA, .374 OBP","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":2,"name":"Joe Cilea","pos":"C","posType":"hitter","from":"Indiana","to":"","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":true,"conference":"Big Ten","status":"available"},{"id":3,"name":"Ethan Hott","pos":"OF","posType":"hitter","from":"Stanford","to":"","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":4,"name":"Davis Baker","pos":"INF","posType":"hitter","from":"Penn","to":"North Carolina","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"Ivy","status":"committed"},{"id":5,"name":"Jonathan Kim","pos":"OF","posType":"hitter","from":"Michigan","to":"","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":6,"name":"Max Arlich","pos":"LHP","posType":"pitcher","from":"Arizona State","to":"Minnesota","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"committed"},{"id":7,"name":"Peter Gimino","pos":"C/INF","posType":"hitter","from":"TCU","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"available"},{"id":8,"name":"Steele Burd","pos":"C","posType":"hitter","from":"Clemson","to":"Stetson","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"committed"},{"id":9,"name":"Spencer Dessart","pos":"RHP","posType":"pitcher","from":"Cal","to":"","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":true,"conference":"ACC","status":"available"},{"id":10,"name":"Chris Bernal","pos":"C","posType":"hitter","from":"Houston","to":"Angelo State","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":true,"conference":"Big 12","status":"committed"},{"id":11,"name":"Alex Bedford","pos":"OF","posType":"hitter","from":"Tennessee","to":"Middle Tennessee","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"SEC","status":"committed"},{"id":12,"name":"Jake Swartz","pos":"RHP","posType":"pitcher","from":"Illinois","to":"Minnesota","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"Big Ten","status":"committed"},{"id":13,"name":"Peter Dubie","pos":"RHP","posType":"pitcher","from":"Brown","to":"Indiana","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Ivy","status":"committed"},{"id":14,"name":"Brandon Larson","pos":"INF/DH","posType":"hitter","from":"Stanford","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":15,"name":"Michael Smosna","pos":"C","posType":"hitter","from":"West Virginia","to":"Central Missouri","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":true,"conference":"Big 12","status":"committed"},{"id":16,"name":"Vaughn Neckar","pos":"RHP","posType":"pitcher","from":"Oklahoma","to":"Point Loma Nazarene","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"SEC","status":"committed"},{"id":17,"name":"Greg Minnick","pos":"RHP","posType":"pitcher","from":"Texas Tech","to":"Penn State","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"committed"},{"id":18,"name":"Michael Merchant","pos":"RHP","posType":"pitcher","from":"Rutgers","to":"Salve Regina","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"committed"},{"id":19,"name":"Preston Sullivan","pos":"RHP","posType":"pitcher","from":"Houston","to":"Rice","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"committed"},{"id":20,"name":"Skyler Hegler","pos":"C","posType":"hitter","from":"Clemson","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":21,"name":"Ashton Peshke","pos":"LHP","posType":"pitcher","from":"Maryland","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":22,"name":"Ethan Hunt","pos":"RHP","posType":"pitcher","from":"Houston","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"available"},{"id":23,"name":"Danny Cercello","pos":"RHP","posType":"pitcher","from":"Houston","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"available"},{"id":24,"name":"Jonny Garber","pos":"C/OF","posType":"hitter","from":"Arizona State","to":"","stats":"","draftEligible":false,"gradTransfer":true,"multiTransfer":false,"conference":"Big 12","status":"available"},{"id":25,"name":"Liam Willson","pos":"INF/OF","posType":"hitter","from":"Maryland","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":true,"conference":"Big Ten","status":"available"},{"id":26,"name":"Luke Klooster","pos":"C","posType":"hitter","from":"Washington","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":27,"name":"Demetrius Deramus","pos":"OF","posType":"hitter","from":"Alabama","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"SEC","status":"available"},{"id":28,"name":"Presley Woodson","pos":"RHP","posType":"pitcher","from":"Florida State","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":29,"name":"Owen Anchors","pos":"OF","posType":"hitter","from":"Clemson","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":30,"name":"Anthony Wilkie","pos":"RHP/INF","posType":"two-way","from":"Clemson","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":31,"name":"Cannon Feazell","pos":"RHP","posType":"pitcher","from":"Clemson","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":32,"name":"Andre Modugno","pos":"INF/RHP","posType":"two-way","from":"Cal","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":33,"name":"Josh Castellani","pos":"INF","posType":"hitter","from":"Clemson","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"ACC","status":"available"},{"id":34,"name":"Blake Sandvik","pos":"C/INF","posType":"hitter","from":"Oregon","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":35,"name":"Kaden Warren","pos":"C/INF","posType":"hitter","from":"Michigan State","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":36,"name":"Korbyn Russell","pos":"LHP","posType":"pitcher","from":"Michigan State","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big Ten","status":"available"},{"id":37,"name":"Tucker Delisle","pos":"RHP","posType":"pitcher","from":"West Virginia","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"Big 12","status":"available"},{"id":38,"name":"Brennon Seigler","pos":"OF","posType":"hitter","from":"Tennessee","to":"","stats":"","draftEligible":false,"gradTransfer":false,"multiTransfer":false,"conference":"SEC","status":"available"}];
+  var CACHE_KEY = "portal-live-players";
+  var CACHE_TS_KEY = "portal-live-ts";
+  var CACHE_TTL = 5 * 60 * 1000; // 5 min — then silently refresh from Sheets
+
+  function playersFromCSV(csv){
+    var rows=parseCSV(csv);
+    return rows.map(function(row,i){return csvRowToPlayer(row,i+1);}).filter(function(p){return p.name;});
+  }
+
+  function fetchFresh(){
+    var ctrl = typeof AbortController !== "undefined" ? new AbortController() : null;
+    var timer = ctrl ? setTimeout(function(){ctrl.abort();}, 12000) : null;
+    fetch(SHEETS_CSV_URL, ctrl ? {signal: ctrl.signal} : {})
+      .then(function(r){
+        clearTimeout(timer);
+        if(!r.ok)throw new Error("HTTP "+r.status);
+        return r.text();
+      })
+      .then(function(csv){
+        var players=playersFromCSV(csv);
+        if(!players.length)return; // keep showing what we have
+        try{localStorage.setItem(CACHE_KEY,JSON.stringify(players));localStorage.setItem(CACHE_TS_KEY,Date.now()+"");}catch(e){}
+        renderPortal(players); // silently swap in fresh data
+      })
+      .catch(function(){ /* silently fail — cached/seed data stays visible */ });
+  }
+
+  // Priority order: localStorage cache → seed baked in → fetch
+  var shown = false;
+  var cachedPlayers = null;
+  try{
+    var raw = localStorage.getItem(CACHE_KEY);
+    if(raw) cachedPlayers = JSON.parse(raw);
+  }catch(e){}
+
+  if(cachedPlayers && cachedPlayers.length){
+    renderPortal(cachedPlayers);
+    shown = true;
+    var cachedAt = parseInt(localStorage.getItem(CACHE_TS_KEY)||"0",10);
+    if(Date.now() - cachedAt > CACHE_TTL) fetchFresh(); // refresh silently
+  } else if(SEED && SEED.length){
+    renderPortal(SEED);
+    shown = true;
+    fetchFresh(); // upgrade seed to fresh data in background
+  } else {
+    fetchFresh(); // true first visit with no seed — must wait
+  }
 })();
 </script>
 </body>
